@@ -2,7 +2,7 @@
 SRC_HOST="zenas.prd.dream.upd.edu.ph"
 
 # Used for push config
-DST_HOST="aquinas.prd.dream.upd.edu.ph"
+DST_HOST="maria.srv.dream.upd.edu.ph"
 
-SRC_BASE="/mnt/geostorage"
-DST_BASE="/mnt/backup_pool/geostorage"
+SRC_BASE="/mnt/pool"
+DST_BASE="/mnt/maria_pool/pl2_temp_backup"
