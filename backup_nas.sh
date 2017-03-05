@@ -31,7 +31,7 @@ TOTALSIZE_PATH="${BASE_PATH}/totalsize/${ESC_SRC}"
 LOCK_FILE="${BASE_PATH}/lock/${ESC_SRC}"
 
 RSYNC_OPTS=(-aiPSA --delete --stats --timeout=300 --ignore-errors \
---info=progress2 --rsync-path="/usr/bin/nice -n 19 rsync")
+--info=progress2)
 
 
 # Check if filter file exists
