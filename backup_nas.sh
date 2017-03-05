@@ -105,7 +105,7 @@ echo Getting size to backup and total size...
 RSYNC_CMD="/usr/bin/nice -n 19 \
 rsync "${RSYNC_OPTS[@]}" -n --log-file=$PRELOG_PATH "${RSYNC_ARGS}""
 echo "RSYNC_CMD: $RSYNC_CMD"
-OUTPUT=$( "${RSYNC_CMD}" )
+OUTPUT=$( eval "${RSYNC_CMD}" )
 checkresult $?
 
 SIZETOBACKUP=`echo "$OUTPUT" | grep "Total transferred file size" | \
@@ -123,7 +123,7 @@ echo Starting actual backup using rsync...
 RSYNC_CMD="/usr/bin/nice -n 19 \
 rsync "${RSYNC_OPTS[@]}" --log-file=$PRELOG_PATH "${RSYNC_ARGS}""
 echo "RSYNC_CMD: $RSYNC_CMD"
-OUTPUT=$( "${RSYNC_CMD}" )
+OUTPUT=$( eval "${RSYNC_CMD}" )
 checkresult $?
 
 
