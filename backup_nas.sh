@@ -31,7 +31,7 @@ TOTALSIZE_PATH="${BASE_PATH}/totalsize/${ESC_SRC}"
 LOCK_FILE="${BASE_PATH}/lock/${ESC_SRC}"
 
 RSYNC_OPTS=(-aiuPSA --stats --timeout=300 --ignore-errors \
---info=progress2 --rsync-path="/usr/bin/nice -n 19 rsync")
+--info=progress2)
 
 
 # Check if filter file exists
@@ -97,13 +97,15 @@ fi
 #exit 1
 
 
-# Get lock
+echo Getting lock...
 touch $LOCK_FILE
 
 
-# Get size to backup and total size
-OUTPUT=$( /usr/bin/nice -n 19 \
-rsync "${RSYNC_OPTS[@]}" -n --log-file=$PRELOG_PATH ${RSYNC_ARGS} )
+echo Getting size to backup and total size...
+RSYNC_CMD="/usr/bin/nice -n 19 \
+rsync "${RSYNC_OPTS[@]}" -n --log-file=$PRELOG_PATH "${RSYNC_ARGS}""
+echo "RSYNC_CMD: $RSYNC_CMD"
+OUTPUT=$( eval "${RSYNC_CMD}" )
 checkresult $?
 
 SIZETOBACKUP=`echo "$OUTPUT" | grep "Total transferred file size" | \
@@ -117,11 +119,13 @@ echo "TOTALSIZE: $TOTALSIZE"
 echo $TOTALSIZE >$TOTALSIZE_PATH
 
 
-# Start actual backup using rsync
-OUTPUT=$( /usr/bin/nice -n 19 \
-rsync "${RSYNC_OPTS[@]}" --log-file=$CURLOG_PATH ${RSYNC_ARGS} )
+echo Starting actual backup using rsync...
+RSYNC_CMD="/usr/bin/nice -n 19 \
+rsync "${RSYNC_OPTS[@]}" --log-file=$CURLOG_PATH "${RSYNC_ARGS}""
+echo "RSYNC_CMD: $RSYNC_CMD"
+OUTPUT=$( eval "${RSYNC_CMD}" )
 checkresult $?
 
 
-# Release lock
+echo Releasing lock...
 rm $LOCK_FILE
