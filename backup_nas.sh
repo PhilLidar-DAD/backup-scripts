@@ -102,8 +102,10 @@ touch $LOCK_FILE
 
 
 echo Getting size to backup and total size...
-OUTPUT=$( /usr/bin/nice -n 19 \
-rsync "${RSYNC_OPTS[@]}" -n --log-file=$PRELOG_PATH "${RSYNC_ARGS}" )
+RSYNC_CMD="/usr/bin/nice -n 19 \
+rsync "${RSYNC_OPTS[@]}" -n --log-file=$PRELOG_PATH "${RSYNC_ARGS}""
+echo "RSYNC_CMD: $RSYNC_CMD"
+OUTPUT=$( "${RSYNC_CMD}" )
 checkresult $?
 
 SIZETOBACKUP=`echo "$OUTPUT" | grep "Total transferred file size" | \
@@ -118,8 +120,10 @@ echo $TOTALSIZE >$TOTALSIZE_PATH
 
 
 echo Starting actual backup using rsync...
-OUTPUT=$( /usr/bin/nice -n 19 \
-rsync "${RSYNC_OPTS[@]}" --log-file=$CURLOG_PATH "${RSYNC_ARGS}" )
+RSYNC_CMD="/usr/bin/nice -n 19 \
+rsync "${RSYNC_OPTS[@]}" --log-file=$PRELOG_PATH "${RSYNC_ARGS}""
+echo "RSYNC_CMD: $RSYNC_CMD"
+OUTPUT=$( "${RSYNC_CMD}" )
 checkresult $?
 
 
