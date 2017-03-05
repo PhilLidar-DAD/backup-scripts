@@ -4,6 +4,7 @@
 case "$1" in
     push|pull)
         DIRECTION="$1"
+        ;;
     *)
         echo 'rsync direction must be set (push/pull)! Exiting.'
         exit 1
