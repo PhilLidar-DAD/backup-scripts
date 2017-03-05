@@ -97,13 +97,13 @@ fi
 #exit 1
 
 
-# Get lock
+echo Getting lock...
 touch $LOCK_FILE
 
 
-# Get size to backup and total size
+echo Getting size to backup and total size...
 OUTPUT=$( /usr/bin/nice -n 19 \
-rsync "${RSYNC_OPTS[@]}" -n --log-file=$PRELOG_PATH ${RSYNC_ARGS} )
+rsync "${RSYNC_OPTS[@]}" -n --log-file=$PRELOG_PATH "${RSYNC_ARGS}" )
 checkresult $?
 
 SIZETOBACKUP=`echo "$OUTPUT" | grep "Total transferred file size" | \
@@ -117,11 +117,11 @@ echo "TOTALSIZE: $TOTALSIZE"
 echo $TOTALSIZE >$TOTALSIZE_PATH
 
 
-# Start actual backup using rsync
+echo Starting actual backup using rsync...
 OUTPUT=$( /usr/bin/nice -n 19 \
-rsync "${RSYNC_OPTS[@]}" --log-file=$CURLOG_PATH ${RSYNC_ARGS} )
+rsync "${RSYNC_OPTS[@]}" --log-file=$CURLOG_PATH "${RSYNC_ARGS}" )
 checkresult $?
 
 
-# Release lock
+echo Releasing lock...
 rm $LOCK_FILE
