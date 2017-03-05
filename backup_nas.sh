@@ -121,7 +121,7 @@ echo $TOTALSIZE >$TOTALSIZE_PATH
 
 echo Starting actual backup using rsync...
 RSYNC_CMD="/usr/bin/nice -n 19 \
-rsync "${RSYNC_OPTS[@]}" --log-file=$PRELOG_PATH "${RSYNC_ARGS}""
+rsync "${RSYNC_OPTS[@]}" --log-file=$CURLOG_PATH "${RSYNC_ARGS}""
 echo "RSYNC_CMD: $RSYNC_CMD"
 OUTPUT=$( eval "${RSYNC_CMD}" )
 checkresult $?
