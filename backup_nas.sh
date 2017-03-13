@@ -11,9 +11,10 @@ case "$1" in
         ;;
 esac
 
+BASE_PATH="$( cd "$( dirname "$0" )" ; pwd -P )"
 
 # Load variables from config file
-source settings.sh
+source "${BASE_PATH}/settings.sh"
 
 SRC_USER="root"
 SRC_DIR="$2"
@@ -23,7 +24,6 @@ DST_USER="root"
 DST_PATH="${DST_BASE}/${SRC_DIR}/"
 
 ESC_SRC=${SRC_DIR//\//_}
-BASE_PATH="$( cd "$( dirname "$0" )" ; pwd -P )"
 PRELOG_PATH="${BASE_PATH}/rsync_prelog/${ESC_SRC}.log"
 CURLOG_PATH="${BASE_PATH}/rsync_curlog/${ESC_SRC}.log"
 SIZETOBACKUP_PATH="${BASE_PATH}/sizetobackup/${ESC_SRC}"
