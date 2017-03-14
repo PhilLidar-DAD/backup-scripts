@@ -81,11 +81,6 @@ mkdir -p "$( dirname "$TOTALSIZE_PATH" )"
 mkdir -p "$( dirname "$LOCK_FILE" )"
 
 
-# Backup previous logs
-mv -f ${PRELOG_PATH} ${PRELOG_PATH}.old
-mv -f ${CURLOG_PATH} ${CURLOG_PATH}.old
-
-
 # Check lock
 if [ -f $LOCK_FILE ]; then
     echo "Lock file exists! Exiting."
@@ -93,12 +88,16 @@ if [ -f $LOCK_FILE ]; then
 fi
 
 
-# Temporarily disable script
-#exit 1
-
-
 echo Getting lock...
 touch $LOCK_FILE
+
+# Backup previous logs
+mv -f ${PRELOG_PATH} ${PRELOG_PATH}.old
+mv -f ${CURLOG_PATH} ${CURLOG_PATH}.old
+
+
+# Temporarily disable script
+#exit 1
 
 
 echo Getting size to backup and total size...
