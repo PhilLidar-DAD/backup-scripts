@@ -30,7 +30,7 @@ SIZETOBACKUP_PATH="${BASE_PATH}/sizetobackup/${ESC_SRC}"
 TOTALSIZE_PATH="${BASE_PATH}/totalsize/${ESC_SRC}"
 LOCK_FILE="${BASE_PATH}/lock/${ESC_SRC}"
 
-RSYNC_OPTS=(-aiPSA --delete --stats --timeout=300 --ignore-errors \
+RSYNC_OPTS=(-aiSA --delete --stats --timeout=300 --ignore-errors \
 --info=progress2)
 
 
