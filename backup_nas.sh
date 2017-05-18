@@ -6,7 +6,7 @@ case "$1" in
         DIRECTION="$1"
         ;;
     *)
-        echo 'rsync direction must be set (push/pull)! Exiting.'
+        echo 'rsync direction must be set (push/pull)! Exiting.' >&2
         exit 1
         ;;
 esac
@@ -83,7 +83,7 @@ mkdir -p "$( dirname "$LOCK_FILE" )"
 
 # Check lock
 if [ -f $LOCK_FILE ]; then
-    echo "Lock file exists! Exiting."
+    echo "Lock file exists! Exiting." >&2
     exit 1
 fi
 
