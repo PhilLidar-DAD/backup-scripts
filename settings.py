@@ -2,23 +2,27 @@ import logging
 import os
 import multiprocessing
 
-# Used for push config
-# DST_HOST = 'aquinas.prd.dream.upd.edu.ph'
-DST_HOST = 'localhost'
+# Push config
+DST_HOST = 'aquinas.prd.dream.upd.edu.ph'
 
-# SRC_BASE = '/mnt/FTP'
-# DST_BASE = '/mnt/backup_pool/FTP'
-SRC_BASE = '/root/backup_tests/a_dir/'
-DST_BASE = '/root/backup_tests/b_dir/'
+SRC_BASE = '/mnt/FTP'
+DST_BASE = '/mnt/backup_pool/FTP'
 
 SRC_USER = DST_USER = 'root'
 
 DST_USER_HOST = DST_USER + '@' + DST_HOST
 
+# Notes:
+#
+# rsync to:
+#
+# FreeNAS doesn't support progress2, and Compression=no -x
+# '--info=progress2', -o Compression=no -x
+#
+# CentOS 7 doesn't support arcfour, use aes128-gcm@openssh.com
+#
 RSYNC_OPTS = ['-lptgoDiSA', '--stats', '--timeout=300', '--ignore-errors',
-              '--info=progress2',
-              "-e'ssh -T -c aes128-gcm@openssh.com -o Compression=no -x'"]
-# "-e'ssh -T -c arcfour -o Compression=no -x'"]
+              "-e'ssh -T -c arcfour'"]
 
 IS_UPDATE = True
 if IS_UPDATE:
