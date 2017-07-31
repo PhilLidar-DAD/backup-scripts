@@ -3,10 +3,13 @@ import os
 import multiprocessing
 
 # Push config
-DST_HOST = 'aquinas.prd.dream.upd.edu.ph'
+# DST_HOST = 'aquinas.prd.dream.upd.edu.ph'
+DST_HOST = 'localhost'
 
-SRC_BASE = '/mnt/FTP'
-DST_BASE = '/mnt/backup_pool/FTP'
+# SRC_BASE = '/mnt/FTP'
+# DST_BASE = '/mnt/backup_pool/FTP'
+SRC_BASE = '/root/backup_tests/a_dir/'
+DST_BASE = '/root/backup_tests/b_dir/add -u'
 
 SRC_USER = DST_USER = 'root'
 
@@ -22,7 +25,7 @@ DST_USER_HOST = DST_USER + '@' + DST_HOST
 # CentOS 7 doesn't support arcfour, use aes128-gcm@openssh.com
 #
 RSYNC_OPTS = ['-lptgoDiSA', '--stats', '--timeout=300', '--ignore-errors',
-              "-e'ssh -T -c arcfour'"]
+              "-e'ssh -T -c aes128-gcm@openssh.com'"]
 
 IS_UPDATE = True
 if IS_UPDATE:

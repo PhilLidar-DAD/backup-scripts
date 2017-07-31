@@ -95,12 +95,33 @@ def release_lock(lockfile, lockfile_path):
         os.remove(lockfile_path)
 
 
-def escape_dirpath(dir_path):
-    return dir_path.replace(' ', '\ ')
+def escape_path(path, replace_char=''):
+    """Escape characters in path.
+
+    Args:
+        path (str): file/dir path
+        replace_char (str, optional): character to replace with
+    """
+    # https://unix.stackexchange.com/a/270979
+    chars = ['\\', '`', '!', '#', '$', '&', '*', '(', ')', '{', '[', '|', ';',
+             "'", '"', '<', '>', '?', ' ', ]
+    escaped_path = path
+    for c in chars:
+        if replace_char:
+            rc = replace_char
+        else:
+            rc = '\\' + c
+        escaped_path = escaped_path.replace(c, rc)
+    return escaped_path
 
 
-def sanitize_dirpath(dir_path):
-    return dir_path.replace(os.sep, '_').replace(' ', '_')
+def simplify_path(path):
+    """Convert escape characters to underscores (including separators).
+
+    Args:
+        path (str): file/dir path
+    """
+    return escape_path(path, '_').replace(os.sep, '_')
 
 
 def prepare_app_dirs(args):
@@ -119,8 +140,8 @@ def prepare_app_dirs(args):
             mkdir_p(opt_dir_path)
 
     # Get app paths
-    esc_src_dir = sanitize_dirpath(args.src_dir)
-    logger.debug('esc_src_dir: %s', esc_src_dir)
+    esc_src_dir = simplify_path(args.src_dir)
+    # print 'esc_src_dir:', esc_src_dir
 
     app_paths = {
         'rsync_prelog': os.path.join(APP_DIRS['RSYNC_PRELOG_DIR'],
@@ -134,6 +155,9 @@ def prepare_app_dirs(args):
         'lockfile_path': os.path.join(APP_DIRS['LOCK_DIR'], esc_src_dir),
         'logfile': os.path.join(APP_DIRS['LOG_DIR'], esc_src_dir + '.log')
     }
+
+    # print 'app_paths:'
+    # pprint(app_paths)
 
     return app_paths
 
@@ -179,7 +203,7 @@ def mk_dstdir(dst_dirpath):
     Args:
         dst_dirpath (str): Remote destination directory
     """
-    ssh_cmd = SSH_CMD + ["'mkdir -p " + escape_dirpath(dst_dirpath) + "'"]
+    ssh_cmd = SSH_CMD + ["'mkdir -p " + escape_path(dst_dirpath) + "'"]
     logger.debug('ssh_cmd: %s', ' '.join(ssh_cmd))
     try:
         subprocess.call(' '.join(ssh_cmd), shell=True)
@@ -220,8 +244,8 @@ def get_backup_sizes(src_dirpath, dst_dirpath, rsync_prelog):
     rsync_cmd = (NICE_CMD + RSYNC_CMD + RSYNC_OPTS +
                  ['-rn',
                   '--log-file=' + rsync_prelog,
-                  escape_dirpath(src_dirpath + os.sep),
-                  DST_USER_HOST + ":'" + escape_dirpath(dst_dirpath + os.sep)
+                  escape_path(src_dirpath + os.sep),
+                  DST_USER_HOST + ":'" + escape_path(dst_dirpath + os.sep)
                   + "'"])
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
     try:
@@ -229,14 +253,17 @@ def get_backup_sizes(src_dirpath, dst_dirpath, rsync_prelog):
     except subprocess.CalledProcessError:
         logger.exception('Error running rsync -n! Exiting.')
         exit(1)
+    sizetobackup = 0
     for l in rsync_out.split('\n'):
         if 'Total file size' in l:
             size_bytes = get_size(l, APP_PATHS['totalsize_path'])
             logger.info('Total size: %.2e GB', size_bytes / (1024. ** 3))
         elif 'Total transferred file size' in l:
-            size_bytes = get_size(l, APP_PATHS['sizetobackup_path'])
+            sizetobackup = size_bytes = get_size(l,
+                                                 APP_PATHS['sizetobackup_path'])
             logger.info('Size to backup: %.2e TB', size_bytes / (1024. ** 4))
             break
+    return sizetobackup
 
 
 def start_backup(srcbase_dirpath, dstbase_dirpath):
@@ -270,7 +297,7 @@ def start_backup(srcbase_dirpath, dstbase_dirpath):
 
     pool.close()
     pool.join()
-    logger.info('dir_count: %s', dir_count)
+    logger.info('Directory count: %s', dir_count)
 
 
 def backup_worker(srcbase_dirpath, src_dirpath, dstbase_dirpath, src_dirpaths):
@@ -286,6 +313,7 @@ def backup_worker(srcbase_dirpath, src_dirpath, dstbase_dirpath, src_dirpaths):
     """
 
     # Find directories within source directory and add them to queue
+    file_count = 0
     try:
         for i in sorted(os.listdir(src_dirpath)):
             # logger.debug('i: %s', i)
@@ -293,6 +321,8 @@ def backup_worker(srcbase_dirpath, src_dirpath, dstbase_dirpath, src_dirpaths):
             # logger.debug('i_path: %s', i_path)
             if os.path.isdir(i_path):
                 src_dirpaths.put(i_path)
+            elif os.path.isfile(i_path):
+                file_count += 1
     except Exception:
         logger.exception('Error finding directories within %s!', src_dirpath)
     finally:
@@ -300,15 +330,19 @@ def backup_worker(srcbase_dirpath, src_dirpath, dstbase_dirpath, src_dirpaths):
 
     # Start backup of source to destination directory
     dst_dirpath = src_dirpath.replace(srcbase_dirpath, dstbase_dirpath)
-    logger.info('rsync %s %s', src_dirpath, dst_dirpath)
+    logger.info('Backup: %s %s', src_dirpath, dst_dirpath)
 
     # Create remote destination directory
     mk_dstdir(dst_dirpath)
 
+    # Skip backup if the directory is empty
+    if file_count == 0:
+        return
+
     # Get rsync log path
     rsync_curlog = os.path.join(APP_DIRS['RSYNC_CURLOG_DIR'],
-                                sanitize_dirpath(src_dirpath
-                                                 .replace(SRC_BASE, ''))
+                                simplify_path(src_dirpath
+                                              .replace(SRC_BASE, ''))
                                 + '.log')
     # Backup old log file
     backup_old_logfile(rsync_curlog)
@@ -316,8 +350,8 @@ def backup_worker(srcbase_dirpath, src_dirpath, dstbase_dirpath, src_dirpaths):
     # Get rsync cmd
     rsync_cmd = (NICE_CMD + RSYNC_CMD + RSYNC_OPTS +
                  ['--log-file=' + rsync_curlog,
-                  escape_dirpath(os.path.join(src_dirpath, '*')),
-                  DST_USER_HOST + ":'" + escape_dirpath(dst_dirpath + os.sep)
+                  os.path.join(escape_path(src_dirpath), '*'),
+                  DST_USER_HOST + ":'" + escape_path(dst_dirpath + os.sep)
                   + "'"])
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
 
@@ -347,10 +381,12 @@ if __name__ == "__main__":
     src_dirpath, dst_dirpath = get_srcdst_dirs(args.src_dir)
 
     # Get backup sizes
-    get_backup_sizes(src_dirpath, dst_dirpath, APP_PATHS['rsync_prelog'])
+    sizetobackup = eget_backup_sizes(src_dirpath, dst_dirpath,
+                                     APP_PATHS['rsync_prelog'])
 
     # Start backup
-    start_backup(src_dirpath, dst_dirpath)
+    if sizetobackup > 0:
+        start_backup(src_dirpath, dst_dirpath)
 
     # Release lock
     release_lock(lockfile, APP_PATHS['lockfile_path'])
