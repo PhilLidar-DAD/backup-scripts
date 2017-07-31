@@ -156,9 +156,6 @@ def prepare_app_dirs(args):
         'logfile': os.path.join(APP_DIRS['LOG_DIR'], esc_src_dir + '.log')
     }
 
-    # print 'app_paths:'
-    # pprint(app_paths)
-
     return app_paths
 
 
@@ -185,7 +182,6 @@ def get_srcdst_dirs(src_dir):
 
     Returns:
         Source and destination directory paths
-
     """
     src_dirpath = os.path.join(SRC_BASE, src_dir)
     if not os.path.isdir(src_dirpath):
@@ -198,23 +194,59 @@ def get_srcdst_dirs(src_dir):
 
 
 def mk_dstdir(dst_dirpath):
-    """Create remote directory.
+    """Create destination directory.
 
     Args:
         dst_dirpath (str): Remote destination directory
     """
-    ssh_cmd = SSH_CMD + ["'mkdir -p " + escape_path(dst_dirpath) + "'"]
-    logger.debug('ssh_cmd: %s', ' '.join(ssh_cmd))
+    mkdir_cmd = ['mkdir', '-p', escape_path(dst_dirpath)]
+    if DST_HOST:
+        mkdir_cmd = SSH_CMD + ["'" + ' '.join(mkdir_cmd) + "'"]
+    logger.debug('mkdir_cmd: %s', ' '.join(mkdir_cmd))
     try:
-        subprocess.call(' '.join(ssh_cmd), shell=True)
+        subprocess.call(' '.join(mkdir_cmd), shell=True)
     except subprocess.CalledProcessError:
-        logger.exception('Error creating remote directory! Exiting.')
+        logger.exception('Error creating destination directory! Exiting.')
         exit(1)
 
 
 def backup_old_logfile(logfile_path):
+    """Backup old log file.
+
+    Args:
+        logfile (str): Path to the log file
+    """
     if os.path.isfile(logfile_path):
         os.rename(logfile_path, logfile_path + '.old')
+
+
+def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
+    """Run rsync.
+
+    Args:
+        src_dirpath (str): Source directory path
+        dst_dirpath (str): Remote directory path
+        logfile (str): Path to the log file
+        dry_run (bool, optional): If True, use -n
+    """
+    rsync_cmd = NICE_CMD + RSYNC_CMD + RSYNC_OPTS + ['--log-file=' + logfile]
+    if dry_run:
+        rsync_cmd += ['-rn']
+    rsync_cmd += [escape_path(src_dirpath) + os.sep]
+    if not dry_run:
+        rsync_cmd[-1] += '*'
+    if DST_HOST:
+        rsync_cmd += [DST_USER_HOST + ":'" + escape_path(dst_dirpath) + os.sep
+                      + "'"]
+    else:
+        rsync_cmd += [escape_path(dst_dirpath) + os.sep]
+    logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
+    try:
+        rsync_out = subprocess.check_output(' '.join(rsync_cmd), shell=True)
+    except subprocess.CalledProcessError:
+        logger.exception('Error running rsync! Exiting.')
+        exit(1)
+    return rsync_out
 
 
 def get_backup_sizes(src_dirpath, dst_dirpath, rsync_prelog):
@@ -241,18 +273,8 @@ def get_backup_sizes(src_dirpath, dst_dirpath, rsync_prelog):
     # Backup old log file
     backup_old_logfile(rsync_prelog)
 
-    rsync_cmd = (NICE_CMD + RSYNC_CMD + RSYNC_OPTS +
-                 ['-rn',
-                  '--log-file=' + rsync_prelog,
-                  escape_path(src_dirpath + os.sep),
-                  DST_USER_HOST + ":'" + escape_path(dst_dirpath + os.sep)
-                  + "'"])
-    logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
-    try:
-        rsync_out = subprocess.check_output(' '.join(rsync_cmd), shell=True)
-    except subprocess.CalledProcessError:
-        logger.exception('Error running rsync -n! Exiting.')
-        exit(1)
+    # Run rsync
+    rsync_out = run_rsync(src_dirpath, dst_dirpath, rsync_prelog)
     sizetobackup = 0
     for l in rsync_out.split('\n'):
         if 'Total file size' in l:
@@ -348,19 +370,20 @@ def backup_worker(srcbase_dirpath, src_dirpath, dstbase_dirpath, src_dirpaths):
     backup_old_logfile(rsync_curlog)
 
     # Get rsync cmd
-    rsync_cmd = (NICE_CMD + RSYNC_CMD + RSYNC_OPTS +
-                 ['--log-file=' + rsync_curlog,
-                  os.path.join(escape_path(src_dirpath), '*'),
-                  DST_USER_HOST + ":'" + escape_path(dst_dirpath + os.sep)
-                  + "'"])
-    logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
+    # rsync_cmd = (NICE_CMD + RSYNC_CMD + RSYNC_OPTS +
+    #              ['--log-file=' + rsync_curlog,
+    #               os.path.join(escape_path(src_dirpath), '*'),
+    #               DST_USER_HOST + ":'" + escape_path(dst_dirpath + os.sep)
+    #               + "'"])
+    # logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
 
-    # Run rsync
-    try:
-        rsync_out = subprocess.check_output(' '.join(rsync_cmd), shell=True)
-    except subprocess.CalledProcessError:
-        logger.exception('Error backing up: %s to %s!',
-                         src_dirpath, dst_dirpath)
+    # # Run rsync
+    # try:
+    #     rsync_out = subprocess.check_output(' '.join(rsync_cmd), shell=True)
+    # except subprocess.CalledProcessError:
+    #     logger.exception('Error backing up: %s to %s!',
+    #                      src_dirpath, dst_dirpath)
+    run_rsync(src_dirpath, dst_dirpath, rsync_curlog, dry_run=False)
 
 
 if __name__ == "__main__":
@@ -381,8 +404,8 @@ if __name__ == "__main__":
     src_dirpath, dst_dirpath = get_srcdst_dirs(args.src_dir)
 
     # Get backup sizes
-    sizetobackup = eget_backup_sizes(src_dirpath, dst_dirpath,
-                                     APP_PATHS['rsync_prelog'])
+    sizetobackup = get_backup_sizes(src_dirpath, dst_dirpath,
+                                    APP_PATHS['rsync_prelog'])
 
     # Start backup
     if sizetobackup > 0:
