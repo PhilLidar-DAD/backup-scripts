@@ -18,6 +18,10 @@ DST_USER_HOST = DST_USER + '@' + DST_HOST
 
 # Notes:
 #
+# rsync from:
+#
+# CentOS 7 doesn't support '-A' (ACLs)
+#
 # rsync to:
 #
 # FreeNAS doesn't support progress2, and Compression=no -x
@@ -25,7 +29,10 @@ DST_USER_HOST = DST_USER + '@' + DST_HOST
 #
 # CentOS 7 doesn't support arcfour, use aes128-gcm@openssh.com
 #
-RSYNC_OPTS = ['-lptgoDiSA', '--stats', '--timeout=300', '--ignore-errors',
+RSYNC_OPTS = ['-lptgoDiSA',
+              '--stats',
+              '--timeout=300',
+              '--ignore-errors',
               "-e'ssh -T -c aes128-gcm@openssh.com'"]
 
 IS_UPDATE = True
