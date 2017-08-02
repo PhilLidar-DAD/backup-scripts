@@ -189,7 +189,10 @@ def get_srcdst_dirs(src_dir):
         exit(1)
     dst_dirpath = os.path.join(DST_BASE, src_dir)
     logger.info('Source dir path: %s', src_dirpath)
-    logger.info('Dest dir path: %s', dst_dirpath)
+    if DST_HOST:
+        logger.info('Dest dir path: %s', DST_USER_HOST + ':' + dst_dirpath)
+    else:
+        logger.info('Dest dir path: %s', dst_dirpath)
     return src_dirpath, dst_dirpath
 
 
@@ -243,10 +246,10 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
     try:
         rsync_out = subprocess.check_output(' '.join(rsync_cmd), shell=True)
+        return rsync_out
     except subprocess.CalledProcessError:
         logger.exception('Error running rsync! Exiting.')
-        exit(1)
-    return rsync_out
+        # exit(1)
 
 
 def get_backup_sizes(src_dirpath, dst_dirpath, rsync_prelog):
@@ -274,17 +277,20 @@ def get_backup_sizes(src_dirpath, dst_dirpath, rsync_prelog):
     backup_old_logfile(rsync_prelog)
 
     # Run rsync
-    rsync_out = run_rsync(src_dirpath, dst_dirpath, rsync_prelog)
     sizetobackup = 0
-    for l in rsync_out.split('\n'):
-        if 'Total file size' in l:
-            size_bytes = get_size(l, APP_PATHS['totalsize_path'])
-            logger.info('Total size: %.2e GB', size_bytes / (1024. ** 3))
-        elif 'Total transferred file size' in l:
-            sizetobackup = size_bytes = get_size(l,
-                                                 APP_PATHS['sizetobackup_path'])
-            logger.info('Size to backup: %.2e TB', size_bytes / (1024. ** 4))
-            break
+    rsync_out = run_rsync(src_dirpath, dst_dirpath, rsync_prelog)
+    if rsync_out:
+        for l in rsync_out.split('\n'):
+            if 'Total file size' in l:
+                size_bytes = get_size(l, APP_PATHS['totalsize_path'])
+                logger.info('Total size: %.2e GB', size_bytes / (1024. ** 3))
+            elif 'Total transferred file size' in l:
+                size_bytes = get_size(l,
+                                      APP_PATHS['sizetobackup_path'])
+                sizetobackup = size_bytes
+                logger.info('Size to backup: %.2e TB',
+                            size_bytes / (1024. ** 4))
+                break
     return sizetobackup
 
 
@@ -308,6 +314,8 @@ def start_backup(srcbase_dirpath, dstbase_dirpath):
                                      dstbase_dirpath, src_dirpaths))
 
     while counter > 0:
+        logger.debug('counter: %s', counter)
+        logger.debug('dir_count: %s', dir_count)
         src_dirpath = src_dirpaths.get()
         if src_dirpath == 'no-dir':
             counter -= 1
@@ -352,7 +360,6 @@ def backup_worker(srcbase_dirpath, src_dirpath, dstbase_dirpath, src_dirpaths):
 
     # Start backup of source to destination directory
     dst_dirpath = src_dirpath.replace(srcbase_dirpath, dstbase_dirpath)
-    logger.info('Backup: %s %s', src_dirpath, dst_dirpath)
 
     # Create remote destination directory
     mk_dstdir(dst_dirpath)
@@ -361,28 +368,22 @@ def backup_worker(srcbase_dirpath, src_dirpath, dstbase_dirpath, src_dirpaths):
     if file_count == 0:
         return
 
+    if DST_HOST:
+        logger.info('Backup: %s %s', src_dirpath,
+                    DST_USER_HOST + ':' + dst_dirpath)
+    else:
+        logger.info('Backup: %s %s',  src_dirpath, dst_dirpath)
+
     # Get rsync log path
-    rsync_curlog = os.path.join(APP_DIRS['RSYNC_CURLOG_DIR'],
-                                simplify_path(src_dirpath
-                                              .replace(SRC_BASE, ''))
-                                + '.log')
+    # rsync_curlog = os.path.join(APP_DIRS['RSYNC_CURLOG_DIR'],
+    #                             simplify_path(src_dirpath
+    #                                           .replace(SRC_BASE, ''))[1:]
+    #                             + '.log')
     # Backup old log file
-    backup_old_logfile(rsync_curlog)
+    # backup_old_logfile(rsync_curlog)
+    rsync_curlog = APP_PATHS['rsync_curlog']
 
-    # Get rsync cmd
-    # rsync_cmd = (NICE_CMD + RSYNC_CMD + RSYNC_OPTS +
-    #              ['--log-file=' + rsync_curlog,
-    #               os.path.join(escape_path(src_dirpath), '*'),
-    #               DST_USER_HOST + ":'" + escape_path(dst_dirpath + os.sep)
-    #               + "'"])
-    # logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
-
-    # # Run rsync
-    # try:
-    #     rsync_out = subprocess.check_output(' '.join(rsync_cmd), shell=True)
-    # except subprocess.CalledProcessError:
-    #     logger.exception('Error backing up: %s to %s!',
-    #                      src_dirpath, dst_dirpath)
+    # Run rsync
     run_rsync(src_dirpath, dst_dirpath, rsync_curlog, dry_run=False)
 
 
