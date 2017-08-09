@@ -234,10 +234,12 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
     """
     rsync_cmd = NICE_CMD + RSYNC_CMD + RSYNC_OPTS + ['--log-file=' + logfile]
     if dry_run:
-        rsync_cmd += ['-rn']
+        rsync_cmd += ['-n']
+    else:
+        rsync_cmd += ['--no-d']
     rsync_cmd += [escape_path(src_dirpath) + os.sep]
-    if not dry_run:
-        rsync_cmd[-1] += '*'
+    # if not dry_run:
+    #     rsync_cmd[-1] += '*'
     if DST_HOST:
         rsync_cmd += [DST_USER_HOST + ":'" + escape_path(dst_dirpath) + os.sep
                       + "'"]
