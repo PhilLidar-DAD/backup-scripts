@@ -26,6 +26,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', action="store_true")
     parser.add_argument('src_dir')
+    parser.add_argument('-db', '--dst_base')
     args = parser.parse_args()
     return args
 
@@ -404,6 +405,8 @@ if __name__ == "__main__":
     setup_logging(APP_PATHS['logfile'], args.verbose)
 
     # Get src & dst dirs
+    if args.dst_base:
+        DST_BASE = args.dst_base
     src_dirpath, dst_dirpath = get_srcdst_dirs(args.src_dir)
 
     # Get backup sizes

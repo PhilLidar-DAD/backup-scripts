@@ -1,16 +1,12 @@
 import logging
 import os
-import multiprocessing
 
 # Push config
 # Unset DST_HOST (''/None) to perform local only rsync
-# DST_HOST = 'aquinas.prd.dream.upd.edu.ph'
-DST_HOST = ''
+DST_HOST = 'aquinas.prd.dream.upd.edu.ph'
 
-# SRC_BASE = '/mnt/FTP'
-# DST_BASE = '/mnt/backup_pool/FTP'
-SRC_BASE = '/root/backup_tests/host1/'
-DST_BASE = '/root/backup_tests/host2/'
+SRC_BASE = '/mnt/FTP'
+DST_BASE = '/mnt/backup_pool/FTP'
 
 SRC_USER = DST_USER = 'root'
 
