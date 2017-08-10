@@ -236,7 +236,7 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
     if dry_run:
         rsync_cmd += ['-n']
     else:
-        rsync_cmd += ['--no-d']
+        rsync_cmd += ['--old-d']
     rsync_cmd += [escape_path(src_dirpath) + os.sep]
     # if not dry_run:
     #     rsync_cmd[-1] += '*'
@@ -250,7 +250,7 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
         rsync_out = subprocess.check_output(' '.join(rsync_cmd), shell=True)
         return rsync_out
     except subprocess.CalledProcessError:
-        logger.exception('Error running rsync! Exiting.')
+        logger.exception('Error running rsync!')
         # exit(1)
 
 
