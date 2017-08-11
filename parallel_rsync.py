@@ -7,6 +7,7 @@ import logging
 import logging.handlers
 import multiprocessing
 import os
+import pipes
 import subprocess
 import sys
 
@@ -238,14 +239,11 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
         rsync_cmd += ['-n']
     else:
         rsync_cmd += ['--old-d']
-    rsync_cmd += [escape_path(src_dirpath) + os.sep]
-    # if not dry_run:
-    #     rsync_cmd[-1] += '*'
+    rsync_cmd += [pipes.quote(src_dirpath + os.sep)]
     if DST_HOST:
-        rsync_cmd += [DST_USER_HOST + ":'" + escape_path(dst_dirpath) + os.sep
-                      + "'"]
+        rsync_cmd += [pipes.quote(DST_USER_HOST + ':' + dst_dirpath + os.sep)]
     else:
-        rsync_cmd += [escape_path(dst_dirpath) + os.sep]
+        rsync_cmd += [pipes.quote(dst_dirpath + os.sep)]
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
     try:
         rsync_out = subprocess.check_output(' '.join(rsync_cmd), shell=True)

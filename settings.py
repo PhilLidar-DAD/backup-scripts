@@ -29,7 +29,7 @@ RSYNC_OPTS = ['-aiSA',
               '--stats',
               '--timeout=300',
               '--ignore-errors',
-              "-e'ssh -T -c arcfour'"]
+              "-e'ssh -T -c aes128-gcm@openssh.com'"]
 
 IS_UPDATE = True
 if IS_UPDATE:
