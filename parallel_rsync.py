@@ -239,11 +239,11 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
         rsync_cmd += ['-n']
     else:
         rsync_cmd += ['--old-d']
-    rsync_cmd += [pipes.quote(src_dirpath + os.sep)]
+    rsync_cmd += ['"' + src_dirpath + os.sep + '"']
     if DST_HOST:
-        rsync_cmd += [pipes.quote(DST_USER_HOST + ':' + dst_dirpath + os.sep)]
+        rsync_cmd += ['"' + DST_USER_HOST + ':' + dst_dirpath + os.sep + '"']
     else:
-        rsync_cmd += [pipes.quote(dst_dirpath + os.sep)]
+        rsync_cmd += ['"' + dst_dirpath + os.sep + '"']
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
     try:
         rsync_out = subprocess.check_output(' '.join(rsync_cmd), shell=True)

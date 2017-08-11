@@ -25,7 +25,7 @@ DST_USER_HOST = DST_USER + '@' + DST_HOST
 #
 # CentOS 7 doesn't support arcfour, use aes128-gcm@openssh.com
 #
-RSYNC_OPTS = ['-aiSA',
+RSYNC_OPTS = ['-aiSsA',
               '--stats',
               '--timeout=300',
               '--ignore-errors',
