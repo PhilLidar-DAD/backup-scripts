@@ -241,19 +241,20 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
         rsync_cmd += ['--old-d']
     rsync_cmd += ['"' + src_dirpath + os.sep + '"']
     if DST_HOST:
-        rsync_cmd += ['"' + DST_USER_HOST + ':' + dst_dirpath + os.sep + '"']
+        rsync_cmd += ['"' + DST_USER_HOST + ':'
+                      + escape_path(dst_dirpath + os.sep) + '"']
     else:
-        rsync_cmd += ['"' + dst_dirpath + os.sep + '"']
+        rsync_cmd += ['"' + escape_path(dst_dirpath + os.sep) + '"']
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
-    try:
-        rsync_ps = subprocess.Popen(' '.join(rsync_cmd), shell=True,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-        rsync_out, rsync_err = rsync_ps.communicate()
-        return rsync_out
-    except subprocess.CalledProcessError:
+    rsync_ps = subprocess.Popen(' '.join(rsync_cmd), shell=True,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+    rsync_out, rsync_err = rsync_ps.communicate()
+    if rsync_ps.returncode != 0:
         logger.exception('Error running rsync!')
         logger.error('rsync_err:\n%s', rsync_err)
+    else:
+        return rsync_out
 
 
 def get_backup_sizes(src_dirpath, dst_dirpath, rsync_prelog):
