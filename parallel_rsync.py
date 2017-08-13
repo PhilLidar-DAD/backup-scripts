@@ -206,13 +206,15 @@ def mk_dstdir(dst_dirpath):
     """
     mkdir_cmd = ['mkdir', '-p', escape_path(dst_dirpath)]
     if DST_HOST:
-        mkdir_cmd = SSH_CMD + ["'" + ' '.join(mkdir_cmd) + "'"]
+        mkdir_cmd = SSH_CMD + ['"' + ' '.join(mkdir_cmd) + '"']
     logger.debug('mkdir_cmd: %s', ' '.join(mkdir_cmd))
-    try:
-        subprocess.call(' '.join(mkdir_cmd), shell=True)
-    except subprocess.CalledProcessError:
+    mkdir_ps = subprocess.Popen(' '.join(mkdir_cmd), shell=True,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+    mkdir_out, mkdir_err = mkdir_ps.communicate()
+    if mkdir_ps.returncode != 0:
         logger.exception('Error creating destination directory! Exiting.')
-        exit(1)
+        logger.error('mkdir_err:\n%s', mkdir_err)
 
 
 def backup_old_logfile(logfile_path):
@@ -242,9 +244,9 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
     rsync_cmd += ['"' + src_dirpath + os.sep + '"']
     if DST_HOST:
         rsync_cmd += ['"' + DST_USER_HOST + ':'
-                      + escape_path(dst_dirpath + os.sep) + '"']
+                      + dst_dirpath + os.sep + '"']
     else:
-        rsync_cmd += ['"' + escape_path(dst_dirpath + os.sep) + '"']
+        rsync_cmd += ['"' + dst_dirpath + os.sep + '"']
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
     rsync_ps = subprocess.Popen(' '.join(rsync_cmd), shell=True,
                                 stdout=subprocess.PIPE,
