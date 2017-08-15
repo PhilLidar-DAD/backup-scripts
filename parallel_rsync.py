@@ -7,11 +7,8 @@ import logging
 import logging.handlers
 import multiprocessing
 import os
-import pipes
 import subprocess
 import sys
-
-from pprint import pprint
 
 from settings import *
 
@@ -254,7 +251,8 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
     rsync_out, rsync_err = rsync_ps.communicate()
     if rsync_ps.returncode != 0:
         logger.exception('Error running rsync!')
-        logger.error('rsync_err:\n%s', rsync_err)
+        logger.error('rsync_cmd:\n%s\nrsync_out:\n%s\nrsync_err:\n%s',
+                     ' '.join(rsync_cmd), rsync_out, rsync_err)
     else:
         return rsync_out
 
