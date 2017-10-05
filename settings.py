@@ -4,9 +4,10 @@ import os
 # Push config
 # Unset DST_HOST (''/None) to perform local only rsync
 DST_HOST = 'aquinas.prd.dream.upd.edu.ph'
+DST_REMOTE = 'aquinas'
 
-SRC_BASE = '/mnt/FTP'
-DST_BASE = '/mnt/backup_pool/FTP'
+SRC_BASE = '/mnt'
+DST_BASE = '/mnt'
 
 SRC_USER = DST_USER = 'root'
 
@@ -30,6 +31,14 @@ RSYNC_OPTS = ['-aiSsA',
               '--timeout=300',
               '--ignore-errors',
               "-e'ssh -T -c aes128-gcm@openssh.com'"]
+
+RCLONE_OPTS = ['--size only',
+			   '--stats 1m',
+			   '--timeout 30s',
+			   '--skip-links',
+			   '-v',
+			   '--transfers 16'
+				]
 
 IS_UPDATE = True
 if IS_UPDATE:
