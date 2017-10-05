@@ -280,9 +280,9 @@ def run_rclone(src_dirpath, dst_remote, dst_dirpath, logfile, dry_run=True):
     rsync_cmd += ['"' + src_dirpath + '"']
     if DST_HOST:
         rsync_cmd += ['"' + dst_remote + ':'
-                      + dst_dirpath + '"']
+                      + dst_dirpath + os.sep + '"']
     else:
-        rsync_cmd += ['"' + dst_remote + ':' + dst_dirpath + '"']
+        rsync_cmd += ['"' + dst_remote + ':' + dst_dirpath + os.sep + '"']
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
     rsync_ps = subprocess.Popen(' '.join(rsync_cmd), shell=True,
                                 stdout=subprocess.PIPE,
