@@ -270,20 +270,19 @@ def run_rclone(src_dirpath, dst_remote, dst_dirpath, logfile, dry_run=True):
     Args:
         src_dirpath (str): Source directory path
         dst_dirpath (str): Remote directory path
+		dst_remote  (str): RClone's configured remote
         logfile (str): Path to the log file
         dry_run (bool, optional): If True, use -n
     """
     rsync_cmd = NICE_CMD + RSYNC_CMD + RSYNC_OPTS + ['--log-file=' + logfile]
     if dry_run:
         rsync_cmd += ['-n']
-    else:
-        rsync_cmd += ['--old-d']
-    rsync_cmd += ['"' + src_dirpath + os.sep + '"']
+    rsync_cmd += ['"' + src_dirpath + '"']
     if DST_HOST:
-        rsync_cmd += ['"' + DST_USER_HOST + ':'
-                      + dst_dirpath + os.sep + '"']
+        rsync_cmd += ['"' + dst_remote + ':'
+                      + dst_dirpath + '"']
     else:
-        rsync_cmd += ['"' + dst_dirpath + os.sep + '"']
+        rsync_cmd += ['"' + dst_remote + ':' + dst_dirpath + '"']
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
     rsync_ps = subprocess.Popen(' '.join(rsync_cmd), shell=True,
                                 stdout=subprocess.PIPE,
