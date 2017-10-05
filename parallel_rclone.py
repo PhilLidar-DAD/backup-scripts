@@ -25,7 +25,7 @@ def parse_arguments():
     parser.add_argument('-v', '--verbose', action="store_true")
     parser.add_argument('src_dir')
     parser.add_argument('-db', '--dst_base')
-	parser.add_argument('-dr', '--dst_remote')
+    parser.add_argument('-dr', '--dst_remote')
     args = parser.parse_args()
     return args
 
