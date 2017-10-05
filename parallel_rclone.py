@@ -188,7 +188,7 @@ def get_srcdst_dirs(src_dir):
         logger.error('%s does not exist! Exiting.', src_dirpath)
         exit(1)
     dst_dirpath = os.path.join(DST_BASE, src_dir)
-	if 'zenas_pool01' in dst_dirpath:
+    if 'zenas_pool01' in dst_dirpath:
         dst_dirpath = dst_dirpath.replace('zenas_pool01/','')
     if 'zenas_pool02' in dst_dirpath:
         dst_dirpath = dst_dirpath.replace('zenas_pool02/','')
