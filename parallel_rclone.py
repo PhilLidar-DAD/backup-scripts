@@ -248,9 +248,9 @@ def run_rsync(src_dirpath, dst_dirpath, logfile, dry_run=True):
     rsync_cmd += ['"' + src_dirpath + os.sep + '"']
     if DST_HOST:
         rsync_cmd += ['"' + DST_USER_HOST + ':'
-                      + dst_dirpath + os.sep + '"']
+                      + dst_dirpath + '"']
     else:
-        rsync_cmd += ['"' + dst_dirpath + os.sep + '"']
+        rsync_cmd += ['"' + dst_dirpath + '"']
     logger.debug('rsync_cmd: %s', ' '.join(rsync_cmd))
     rsync_ps = subprocess.Popen(' '.join(rsync_cmd), shell=True,
                                 stdout=subprocess.PIPE,

@@ -3,7 +3,7 @@ import os
 
 # Push config
 # Unset DST_HOST (''/None) to perform local only rsync
-DST_HOST = 'aquinas.prd.dream.upd.edu.ph'
+DST_HOST = 'aquinas.local'
 DST_REMOTE = 'aquinas'
 
 SRC_BASE = '/mnt'
