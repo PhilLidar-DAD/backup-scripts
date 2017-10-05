@@ -63,7 +63,9 @@ APP_DIRS = {
 
 NICE_CMD = ['/usr/bin/nice', '-n', '19']
 
-RSYNC_CMD = ['/usr/bin/rsync']
+RSYNC_CMD = ['/usr/local/bin/rsync']
+
+RCLONE_CMD = ['/usr/local/bin/rclone']
 
 SSH_CMD = ['/usr/bin/ssh', DST_USER_HOST]
 
